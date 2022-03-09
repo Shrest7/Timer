@@ -43,6 +43,10 @@ namespace timer2
             SetUpSoundPlayer();
             SetUpNumericUpDowns();
             CenterToScreen();
+
+            btnClose.FlatAppearance.BorderColor = Color.White;
+            btnClose.FlatAppearance.BorderSize = 1;
+            btnMinimize.FlatAppearance.BorderSize = 1;
         }
 
         private void SetUpNumericUpDowns()
@@ -130,6 +134,8 @@ namespace timer2
 
         private void BtnPause_Click(object sender, EventArgs e)
         {
+            _isPaused = true;
+
             if (_mainTimer.Enabled)
                 _mainTimer.Stop();
 
@@ -137,13 +143,13 @@ namespace timer2
                 _progressTimer.Stop();
         }
 
-        private void HandleCountdown()
+        private void HandleStart()
         {
             _timeSpan = TimeSpan.Zero;
 
-            int hours = (int) hoursUpDown.Value;
-            int minutes = (int) minutesUpDown.Value;
-            int seconds = (int) secondsUpDown.Value;
+            int hours = (int)hoursUpDown.Value;
+            int minutes = (int)minutesUpDown.Value;
+            int seconds = (int)secondsUpDown.Value;
 
             _timeSpan = new TimeSpan(hours, minutes, seconds);
 
@@ -161,6 +167,13 @@ namespace timer2
             _progressTimer.Start();
 
             UpdateLblTime();
+        }
+
+        private void HandleResume()
+        {
+            _mainTimer.Start();
+            _progressTimer.Start();
+            _isPaused = false;
         }
 
         private void UpdateLblTime()
@@ -193,7 +206,7 @@ namespace timer2
                 e.Handled = true;
 
                 HandleEmptyNumericUpDown(sender, e);
-                HandleCountdown();
+                HandleStart();
             }
         }
 
@@ -209,7 +222,14 @@ namespace timer2
 
         private void BtnStartResume_Click(object sender, EventArgs e)
         {
-            HandleCountdown();
+            if (!_isPaused)
+            {
+                HandleStart();
+            }
+            else
+            {
+                HandleResume();
+            }
         }
 
         private void HoursUpDown_KeyDown(object sender, KeyEventArgs e)

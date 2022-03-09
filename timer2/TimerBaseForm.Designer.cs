@@ -53,11 +53,10 @@
             this.btnClose.BackgroundImage = global::timer2.Properties.Resources.close;
             this.btnClose.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClose.Location = new System.Drawing.Point(430, 10);
-            this.btnClose.Margin = new System.Windows.Forms.Padding(0);
+            this.btnClose.Location = new System.Drawing.Point(418, 5);
             this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(54, 53);
-            this.btnClose.TabIndex = 0;
+            this.btnClose.Size = new System.Drawing.Size(60, 60);
+            this.btnClose.TabIndex = 11;
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.BtnClose_Click);
             // 
@@ -104,15 +103,17 @@
             // btnMinimize
             // 
             this.btnMinimize.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnMinimize.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnMinimize.BackColor = System.Drawing.Color.Black;
+            this.btnMinimize.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnMinimize.Font = new System.Drawing.Font("Microsoft Sans Serif", 27.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.btnMinimize.ForeColor = System.Drawing.Color.White;
-            this.btnMinimize.Location = new System.Drawing.Point(374, 0);
+            this.btnMinimize.Location = new System.Drawing.Point(355, 5);
+            this.btnMinimize.Margin = new System.Windows.Forms.Padding(0);
             this.btnMinimize.Name = "btnMinimize";
-            this.btnMinimize.Size = new System.Drawing.Size(66, 58);
+            this.btnMinimize.Size = new System.Drawing.Size(60, 60);
             this.btnMinimize.TabIndex = 5;
             this.btnMinimize.Text = "_";
-            this.btnMinimize.UseVisualStyleBackColor = true;
+            this.btnMinimize.UseVisualStyleBackColor = false;
             this.btnMinimize.Click += new System.EventHandler(this.BtnMinimize_Click);
             // 
             // BtnSettings
@@ -177,7 +178,7 @@
             this.hoursUpDown.Location = new System.Drawing.Point(15, 82);
             this.hoursUpDown.Name = "hoursUpDown";
             this.hoursUpDown.Size = new System.Drawing.Size(76, 58);
-            this.hoursUpDown.TabIndex = 14;
+            this.hoursUpDown.TabIndex = 0;
             this.hoursUpDown.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.hoursUpDown.KeyDown += new System.Windows.Forms.KeyEventHandler(this.HoursUpDown_KeyDown);
             // 
