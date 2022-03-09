@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Media;
 using System.Windows.Forms;
 using System.IO;
+using System.Globalization;
 
 namespace timer2
 {
@@ -18,21 +19,8 @@ namespace timer2
         private readonly Timer _progressTimer;
         private SoundPlayer _soundPlayer;
         private TimeSpan _timeSpan;
-        private int _progressBarValue;
-
-        private float _time;
-        public float Time {
-            get
-            {
-                return _time;
-            }
-            set
-            {
-                _time = value;
-                _progressTimer.Interval = 
-                    Convert.ToInt32(_time * 60 * 60 * 1000 / 100);
-            }
-        }
+        private int _elapsedTimePercentage;
+        private bool _isPaused = false;
 
         private SettingsForm _settingsForm;
         public SettingsForm GetSettingsForm
@@ -45,19 +33,6 @@ namespace timer2
             }
         }
 
-        public string ConvertCommaToDot(string text)
-        {
-            char[] textArr = text.ToCharArray();
-
-            for(int i = 0; i<textArr.Length; i++)
-            {
-                if (textArr[i].Equals(','))
-                    textArr[i] = '.';
-            }
-
-            return new string(textArr);
-        }
-
         public TimerBaseForm()
         {
             InitializeComponent();
@@ -66,7 +41,28 @@ namespace timer2
             _timeSpan = new TimeSpan();
             _progressTimer = new Timer();
             SetUpSoundPlayer();
+            SetUpNumericUpDowns();
             CenterToScreen();
+        }
+
+        private void SetUpNumericUpDowns()
+        {
+            hoursUpDown.Leave += HandleEmptyNumericUpDown;
+            minutesUpDown.Leave += HandleEmptyNumericUpDown;
+            secondsUpDown.Leave += HandleEmptyNumericUpDown;
+        }
+
+        private void HandleEmptyNumericUpDown(object sender, EventArgs e)
+        {
+            var numericUpDown = (NumericUpDown) sender;
+            if (numericUpDown != null)
+            {
+                if (string.IsNullOrWhiteSpace(numericUpDown.Text))
+                {
+                    numericUpDown.Value = numericUpDown.Minimum;
+                    numericUpDown.Text = numericUpDown.Value.ToString();
+                }
+            }
         }
 
         private void SetUpSoundPlayer()
@@ -82,7 +78,7 @@ namespace timer2
         private void BtnClose_Click(object sender, EventArgs e)
         {
             DialogResult dialogResult = MessageBox.Show("Are you sure you want to quit?",
-                "Warning", MessageBoxButtons.YesNo);
+                "Confirm", MessageBoxButtons.YesNo);
 
             if(dialogResult.Equals(DialogResult.Yes))
                 Close();
@@ -95,11 +91,10 @@ namespace timer2
 
             if(_timeSpan.Seconds >= 0)
             {
-                lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
+                UpdateLblTime();
             }
             else
             {
-                MessageBox.Show(ProgressBar.Value.ToString());
                 ProgressBar.Value = 100;
 
                 _mainTimer.Stop();
@@ -120,8 +115,8 @@ namespace timer2
 
         private void ProgressTimer_Tick(object sender, EventArgs e)
         {
-            IncreaseProgressBar(_progressBarValue);
-            _progressBarValue++;
+            IncreaseProgressBar(_elapsedTimePercentage);
+            _elapsedTimePercentage++;
         }
 
         private void IncreaseProgressBar(int value)
@@ -136,78 +131,48 @@ namespace timer2
         private void BtnPause_Click(object sender, EventArgs e)
         {
             if (_mainTimer.Enabled)
-            {
                 _mainTimer.Stop();
-            }
+
             if (_progressTimer.Enabled)
-            {
                 _progressTimer.Stop();
-            }
         }
 
-        private void BtnResume_Click(object sender, EventArgs e)
+        private void HandleCountdown()
         {
-            if(!_mainTimer.Enabled)
+            _timeSpan = TimeSpan.Zero;
+
+            int hours = (int) hoursUpDown.Value;
+            int minutes = (int) minutesUpDown.Value;
+            int seconds = (int) secondsUpDown.Value;
+
+            _timeSpan = new TimeSpan(hours, minutes, seconds);
+
+            if (_timeSpan.TotalSeconds == 0)
+                return;
+
+            var totalTime = _timeSpan.TotalHours;
+
+            _progressTimer.Interval =
+                    Convert.ToInt32(totalTime * 60 * 60 * 1000 / 100);
+
+            _mainTimer.Start();
+            _elapsedTimePercentage = 1;
+            ProgressBar.Value = 0;
+            _progressTimer.Start();
+
+            UpdateLblTime();
+        }
+
+        private void UpdateLblTime()
+        {
+            if (_timeSpan.TotalDays < 1)
             {
-                _mainTimer.Start();
+                lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
             }
-            if (!_progressTimer.Enabled)
+            else
             {
-                _progressTimer.Start();
+                lblTime.Text = _timeSpan.ToString("c", new CultureInfo("en-US"));
             }
-        }
-
-        private void BtnMinimize_Click(object sender, EventArgs e)
-        {
-            WindowState = FormWindowState.Minimized;
-        }
-
-        private void TxtTime_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                e.SuppressKeyPress = true;
-                e.Handled = true;
-                try
-                {
-                    Time = float.Parse(ConvertCommaToDot(txtBoxTime.Text));
-                    _timeSpan = TimeSpan.FromHours(Time);
-                }
-                catch (FormatException ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-
-                if (!string.IsNullOrEmpty(txtBoxTime.Text))
-                {
-                    _mainTimer.Start();
-                    _progressBarValue = 1;
-                    ProgressBar.Value = 0;
-                    _progressTimer.Start();
-                    lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
-                }
-                txtBoxTime.Clear();
-            }
-        }
-
-        private void TxtBoxTime_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if(e.KeyChar == (char) Keys.Space)
-            {
-                if (_mainTimer.Enabled)
-                {
-                    _mainTimer.Stop();
-                }
-                else
-                {
-                    _mainTimer.Start();
-                }
-            }
-        }
-
-        private void BtnSettings_Click(object sender, EventArgs e)
-        {
-            _settingsForm.Show();
         }
 
         protected override void WndProc(ref Message m)
@@ -218,6 +183,48 @@ namespace timer2
             base.WndProc(ref m);
             if (m.Msg == WM_NCHITTEST)
                 m.Result = (IntPtr)(HT_CAPTION);
+        }
+
+        private void StartOnEnterClick(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                e.Handled = true;
+
+                HandleEmptyNumericUpDown(sender, e);
+                HandleCountdown();
+            }
+        }
+
+        private void BtnMinimize_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
+        }
+
+        private void BtnSettings_Click(object sender, EventArgs e)
+        {
+            _settingsForm.Show();
+        }
+
+        private void BtnStartResume_Click(object sender, EventArgs e)
+        {
+            HandleCountdown();
+        }
+
+        private void HoursUpDown_KeyDown(object sender, KeyEventArgs e)
+        {
+            StartOnEnterClick(sender, e);
+        }
+
+        private void MinutesUpDown_KeyDown(object sender, KeyEventArgs e)
+        {
+            StartOnEnterClick(sender, e);
+        }
+
+        private void SecondsUpDown_KeyDown(object sender, KeyEventArgs e)
+        {
+            StartOnEnterClick(sender, e);
         }
     }
 }
