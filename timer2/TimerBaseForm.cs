@@ -15,12 +15,27 @@ namespace timer2
 {
     public partial class TimerBaseForm : Form
     {
-        const int taskbarHeight = 40;
-        SoundPlayer soundPlayer;
-        TimeSpan tsp = new TimeSpan();
+        private readonly Timer _progressTimer;
+        private SoundPlayer _soundPlayer;
+        private TimeSpan _timeSpan;
+        private int _progressBarValue;
 
-        private static SettingsForm _settingsForm;
-        public static SettingsForm GetSettingsForm
+        private float _time;
+        public float Time {
+            get
+            {
+                return _time;
+            }
+            set
+            {
+                _time = value;
+                _progressTimer.Interval = 
+                    Convert.ToInt32(_time * 60 * 60 * 1000 / 100);
+            }
+        }
+
+        private SettingsForm _settingsForm;
+        public SettingsForm GetSettingsForm
         {
             get
             {
@@ -39,69 +54,115 @@ namespace timer2
                 if (textArr[i].Equals(','))
                     textArr[i] = '.';
             }
+
             return new string(textArr);
         }
+
         public TimerBaseForm()
         {
             InitializeComponent();
-            //_settingsForm = GetSettingsForm;
+
+            _settingsForm = GetSettingsForm;
+            _timeSpan = new TimeSpan();
+            _progressTimer = new Timer();
+            SetUpSoundPlayer();
+            CenterToScreen();
+        }
+
+        private void SetUpSoundPlayer()
+        {
             const string fileName = "videoplayback.wav";
             string currentDirectory = Environment.CurrentDirectory;
             string projectDirectory = Directory.GetParent(currentDirectory).Parent.FullName;
-            
+            _progressTimer.Tick += ProgressTimer_Tick;
             string path = Path.Combine(projectDirectory, @"Resources", fileName);
-            soundPlayer = new SoundPlayer(path);
-
-            this.Location = new Point(1920 - Size.Width, 1080 - Size.Height - taskbarHeight);
+            _soundPlayer = new SoundPlayer(path);
         }
 
-        private void btnClose_Click(object sender, EventArgs e)
+        private void BtnClose_Click(object sender, EventArgs e)
         {
-            Close();
+            DialogResult dialogResult = MessageBox.Show("Are you sure you want to quit?",
+                "Warning", MessageBoxButtons.YesNo);
+
+            if(dialogResult.Equals(DialogResult.Yes))
+                Close();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void Timer1_Tick(object sender, EventArgs e)
         {
             TimeSpan second = TimeSpan.FromSeconds(1);
-            tsp = tsp.Subtract(second);
-            if(tsp.Seconds >= 0)
+            _timeSpan = _timeSpan.Subtract(second);
+
+            if(_timeSpan.Seconds >= 0)
             {
-                lblTime.Text = tsp.ToString("hh':'mm':'ss");
+                lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
             }
             else
             {
-                timer1.Stop();
-            }
+                MessageBox.Show(ProgressBar.Value.ToString());
+                ProgressBar.Value = 100;
 
-            if (!timer1.Enabled)    
-            {
-                soundPlayer.Play();
+                _mainTimer.Stop();
+                _progressTimer.Stop();
+                HandleSoundPlaying();
             }
         }
 
-        private void btnPause_Click(object sender, EventArgs e)
+        private void HandleSoundPlaying()
         {
-            if (timer1.Enabled)
-            {
-                timer1.Stop();
-            }
-            soundPlayer.Stop();
+            _soundPlayer.PlayLooping();
+            DialogResult dialogResult = MessageBox.Show("Time's up!",
+                "Notification");
+
+            if (dialogResult.Equals(DialogResult.OK))
+                _soundPlayer.Stop();
         }
 
-        private void btnResume_Click(object sender, EventArgs e)
+        private void ProgressTimer_Tick(object sender, EventArgs e)
         {
-            if(timer1.Enabled == false)
+            IncreaseProgressBar(_progressBarValue);
+            _progressBarValue++;
+        }
+
+        private void IncreaseProgressBar(int value)
+        {
+            if(value <= 100)
             {
-                timer1.Start();
+                ProgressBar.Value = value;
+                ProgressBar.Value = value - 1;
             }
         }
 
-        private void btnMinimize_Click(object sender, EventArgs e)
+        private void BtnPause_Click(object sender, EventArgs e)
         {
-            this.WindowState = FormWindowState.Minimized;
+            if (_mainTimer.Enabled)
+            {
+                _mainTimer.Stop();
+            }
+            if (_progressTimer.Enabled)
+            {
+                _progressTimer.Stop();
+            }
         }
 
-        private void txtTime_KeyDown(object sender, KeyEventArgs e)
+        private void BtnResume_Click(object sender, EventArgs e)
+        {
+            if(!_mainTimer.Enabled)
+            {
+                _mainTimer.Start();
+            }
+            if (!_progressTimer.Enabled)
+            {
+                _progressTimer.Start();
+            }
+        }
+
+        private void BtnMinimize_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
+        }
+
+        private void TxtTime_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
@@ -109,8 +170,8 @@ namespace timer2
                 e.Handled = true;
                 try
                 {
-                    float time = float.Parse(ConvertCommaToDot(txtBoxTime.Text));
-                    tsp = TimeSpan.FromHours(time);
+                    Time = float.Parse(ConvertCommaToDot(txtBoxTime.Text));
+                    _timeSpan = TimeSpan.FromHours(Time);
                 }
                 catch (FormatException ex)
                 {
@@ -119,24 +180,27 @@ namespace timer2
 
                 if (!string.IsNullOrEmpty(txtBoxTime.Text))
                 {
-                    timer1.Start();
-                    lblTime.Text = tsp.ToString("hh':'mm':'ss");
+                    _mainTimer.Start();
+                    _progressBarValue = 1;
+                    ProgressBar.Value = 0;
+                    _progressTimer.Start();
+                    lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
                 }
                 txtBoxTime.Clear();
             }
         }
 
-        private void txtBoxTime_KeyPress(object sender, KeyPressEventArgs e)
+        private void TxtBoxTime_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if(e.KeyChar == (char)Keys.Space)
+            if(e.KeyChar == (char) Keys.Space)
             {
-                if (timer1.Enabled)
+                if (_mainTimer.Enabled)
                 {
-                    timer1.Stop();
+                    _mainTimer.Stop();
                 }
                 else
                 {
-                    timer1.Start();
+                    _mainTimer.Start();
                 }
             }
         }
