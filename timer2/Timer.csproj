@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TimerBaseForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -92,9 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\8783.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\close.png" />

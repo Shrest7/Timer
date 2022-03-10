@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.Remoting.Channels;
-using System.Text;
-using System.Threading.Tasks;
 using System.Media;
 using System.Windows.Forms;
 using System.IO;
@@ -16,11 +9,13 @@ namespace timer2
 {
     public partial class TimerBaseForm : Form
     {
-        private readonly Timer _progressTimer;
+        private readonly Timer _progressTimer = new Timer();
+        private readonly TimeSpan _second = TimeSpan.FromSeconds(1);
+        private TimeSpan _mainTime = new TimeSpan();
         private SoundPlayer _soundPlayer;
-        private TimeSpan _timeSpan;
         private int _elapsedTimePercentage;
         private bool _isPaused = false;
+
 
         private SettingsForm _settingsForm;
         public SettingsForm GetSettingsForm
@@ -37,35 +32,30 @@ namespace timer2
         {
             InitializeComponent();
 
-            _settingsForm = GetSettingsForm;
-            _timeSpan = new TimeSpan();
-            _progressTimer = new Timer();
+            _progressTimer.Tick += ProgressTimer_Tick;
             SetUpSoundPlayer();
-            SetUpNumericUpDowns();
+            SetUpVisuals();
+        }
+
+        private void SetUpVisuals()
+        {
             CenterToScreen();
+
+            MaximumSize = Size;
 
             btnClose.FlatAppearance.BorderColor = Color.White;
             btnClose.FlatAppearance.BorderSize = 1;
             btnMinimize.FlatAppearance.BorderSize = 1;
         }
 
-        private void SetUpNumericUpDowns()
-        {
-            hoursUpDown.Leave += HandleEmptyNumericUpDown;
-            minutesUpDown.Leave += HandleEmptyNumericUpDown;
-            secondsUpDown.Leave += HandleEmptyNumericUpDown;
-        }
-
         private void HandleEmptyNumericUpDown(object sender, EventArgs e)
         {
-            var numericUpDown = (NumericUpDown) sender;
-            if (numericUpDown != null)
+            var numericUpDown = (NumericUpDown)sender;
+
+            if (numericUpDown != null &&
+                string.IsNullOrWhiteSpace(numericUpDown.Text))
             {
-                if (string.IsNullOrWhiteSpace(numericUpDown.Text))
-                {
-                    numericUpDown.Value = numericUpDown.Minimum;
-                    numericUpDown.Text = numericUpDown.Value.ToString();
-                }
+                numericUpDown.Value = numericUpDown.Minimum;
             }
         }
 
@@ -74,7 +64,6 @@ namespace timer2
             const string fileName = "videoplayback.wav";
             string currentDirectory = Environment.CurrentDirectory;
             string projectDirectory = Directory.GetParent(currentDirectory).Parent.FullName;
-            _progressTimer.Tick += ProgressTimer_Tick;
             string path = Path.Combine(projectDirectory, @"Resources", fileName);
             _soundPlayer = new SoundPlayer(path);
         }
@@ -82,24 +71,23 @@ namespace timer2
         private void BtnClose_Click(object sender, EventArgs e)
         {
             DialogResult dialogResult = MessageBox.Show("Are you sure you want to quit?",
-                "Confirm", MessageBoxButtons.YesNo);
+                "Please confirm", MessageBoxButtons.YesNo);
 
             if(dialogResult.Equals(DialogResult.Yes))
                 Close();
         }
 
-        private void Timer1_Tick(object sender, EventArgs e)
+        private void MainTimer_Tick(object sender, EventArgs e)
         {
-            TimeSpan second = TimeSpan.FromSeconds(1);
-            _timeSpan = _timeSpan.Subtract(second);
+            _mainTime = _mainTime.Subtract(_second);
 
-            if(_timeSpan.Seconds >= 0)
+            if(_mainTime.Seconds >= 0)
             {
                 UpdateLblTime();
             }
             else
             {
-                ProgressBar.Value = 100;
+                progressBar.Value = 100;
 
                 _mainTimer.Stop();
                 _progressTimer.Stop();
@@ -120,15 +108,14 @@ namespace timer2
         private void ProgressTimer_Tick(object sender, EventArgs e)
         {
             IncreaseProgressBar(_elapsedTimePercentage);
-            _elapsedTimePercentage++;
         }
 
         private void IncreaseProgressBar(int value)
         {
-            if(value <= 100)
+            if (value <= 100)
             {
-                ProgressBar.Value = value;
-                ProgressBar.Value = value - 1;
+                progressBar.Value = value;
+                _elapsedTimePercentage++;
             }
         }
 
@@ -145,25 +132,23 @@ namespace timer2
 
         private void HandleStart()
         {
-            _timeSpan = TimeSpan.Zero;
-
             int hours = (int)hoursUpDown.Value;
             int minutes = (int)minutesUpDown.Value;
             int seconds = (int)secondsUpDown.Value;
 
-            _timeSpan = new TimeSpan(hours, minutes, seconds);
+            _mainTime = new TimeSpan(hours, minutes, seconds);
 
-            if (_timeSpan.TotalSeconds == 0)
+            if (_mainTime.TotalSeconds == 0)
                 return;
-
-            var totalTime = _timeSpan.TotalHours;
-
-            _progressTimer.Interval =
-                    Convert.ToInt32(totalTime * 60 * 60 * 1000 / 100);
+            
+            //This basically sets interval to 100 equal parts based on time provided
+            _progressTimer.Interval = 
+                Convert.ToInt32(_mainTime.TotalHours * 60 * 60 * 1000 / 100);
 
             _mainTimer.Start();
-            _elapsedTimePercentage = 1;
-            ProgressBar.Value = 0;
+
+            _elapsedTimePercentage = 0;
+            progressBar.Value = 0;
             _progressTimer.Start();
 
             UpdateLblTime();
@@ -178,14 +163,10 @@ namespace timer2
 
         private void UpdateLblTime()
         {
-            if (_timeSpan.TotalDays < 1)
-            {
-                lblTime.Text = _timeSpan.ToString("hh':'mm':'ss");
-            }
+            if (_mainTime.TotalDays < 1)
+                lblTime.Text = _mainTime.ToString("hh':'mm':'ss");
             else
-            {
-                lblTime.Text = _timeSpan.ToString("c", new CultureInfo("en-US"));
-            }
+                lblTime.Text = _mainTime.ToString("c", new CultureInfo("en-US"));
         }
 
         protected override void WndProc(ref Message m)
@@ -217,19 +198,16 @@ namespace timer2
 
         private void BtnSettings_Click(object sender, EventArgs e)
         {
+            _settingsForm = GetSettingsForm;
             _settingsForm.Show();
         }
 
         private void BtnStartResume_Click(object sender, EventArgs e)
         {
             if (!_isPaused)
-            {
                 HandleStart();
-            }
             else
-            {
                 HandleResume();
-            }
         }
 
         private void HoursUpDown_KeyDown(object sender, KeyEventArgs e)
