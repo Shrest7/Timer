@@ -235,7 +235,7 @@ namespace timer2
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
-                //e.Handled = true;
+                e.Handled = true;
 
                 HandleEmptyNumericUpDown(sender, e);
                 HandleStart();
