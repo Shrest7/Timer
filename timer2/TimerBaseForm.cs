@@ -4,16 +4,17 @@ using System.Media;
 using System.Windows.Forms;
 using System.IO;
 using System.Globalization;
+using System.Threading;
+using System.ComponentModel;
 
 namespace timer2
 {
     public partial class TimerBaseForm : Form
     {
-        private readonly Timer _progressTimer = new Timer();
-        private readonly TimeSpan _second = TimeSpan.FromSeconds(1);
+        private ManualResetEvent _resetEvent = new ManualResetEvent(false);
         private TimeSpan _mainTime = new TimeSpan();
         private SoundPlayer _soundPlayer;
-        private int _elapsedTimePercentage;
+        private int _totalTimeInSeconds;
         private bool _isPaused = false;
 
 
@@ -32,7 +33,6 @@ namespace timer2
         {
             InitializeComponent();
 
-            _progressTimer.Tick += ProgressTimer_Tick;
             SetUpSoundPlayer();
             SetUpVisuals();
         }
@@ -42,10 +42,18 @@ namespace timer2
             CenterToScreen();
 
             MaximumSize = Size;
-
             btnClose.FlatAppearance.BorderColor = Color.White;
             btnClose.FlatAppearance.BorderSize = 1;
             btnMinimize.FlatAppearance.BorderSize = 1;
+        }
+
+        private void SetUpSoundPlayer()
+        {
+            const string fileName = "videoplayback.wav";
+            string currentDirectory = Environment.CurrentDirectory;
+            string projectDirectory = Directory.GetParent(currentDirectory).Parent.FullName;
+            string path = Path.Combine(projectDirectory, @"Resources", fileName);
+            _soundPlayer = new SoundPlayer(path);
         }
 
         private void HandleEmptyNumericUpDown(object sender, EventArgs e)
@@ -59,15 +67,6 @@ namespace timer2
             }
         }
 
-        private void SetUpSoundPlayer()
-        {
-            const string fileName = "videoplayback.wav";
-            string currentDirectory = Environment.CurrentDirectory;
-            string projectDirectory = Directory.GetParent(currentDirectory).Parent.FullName;
-            string path = Path.Combine(projectDirectory, @"Resources", fileName);
-            _soundPlayer = new SoundPlayer(path);
-        }
-
         private void BtnClose_Click(object sender, EventArgs e)
         {
             DialogResult dialogResult = MessageBox.Show("Are you sure you want to quit?",
@@ -79,7 +78,7 @@ namespace timer2
 
         private void MainTimer_Tick(object sender, EventArgs e)
         {
-            _mainTime = _mainTime.Subtract(_second);
+            _mainTime = _mainTime.Subtract(TimeSpan.FromSeconds(1));
 
             if(_mainTime.Seconds >= 0)
             {
@@ -87,10 +86,7 @@ namespace timer2
             }
             else
             {
-                progressBar.Value = 100;
-
                 _mainTimer.Stop();
-                _progressTimer.Stop();
                 HandleSoundPlaying();
             }
         }
@@ -105,20 +101,6 @@ namespace timer2
                 _soundPlayer.Stop();
         }
 
-        private void ProgressTimer_Tick(object sender, EventArgs e)
-        {
-            IncreaseProgressBar(_elapsedTimePercentage);
-        }
-
-        private void IncreaseProgressBar(int value)
-        {
-            if (value <= 100)
-            {
-                progressBar.Value = value;
-                _elapsedTimePercentage++;
-            }
-        }
-
         private void BtnPause_Click(object sender, EventArgs e)
         {
             _isPaused = true;
@@ -126,8 +108,8 @@ namespace timer2
             if (_mainTimer.Enabled)
                 _mainTimer.Stop();
 
-            if (_progressTimer.Enabled)
-                _progressTimer.Stop();
+            if (backgroundWorker.IsBusy)
+                _resetEvent.Reset();
         }
 
         private void HandleStart()
@@ -137,19 +119,22 @@ namespace timer2
             int seconds = (int)secondsUpDown.Value;
 
             _mainTime = new TimeSpan(hours, minutes, seconds);
+            _totalTimeInSeconds = (int)_mainTime.TotalSeconds;
 
             if (_mainTime.TotalSeconds == 0)
                 return;
-            
-            //This basically sets interval to 100 equal parts based on time provided
-            _progressTimer.Interval = 
-                Convert.ToInt32(_mainTime.TotalHours * 60 * 60 * 1000 / 100);
 
             _mainTimer.Start();
 
-            _elapsedTimePercentage = 0;
             progressBar.Value = 0;
-            _progressTimer.Start();
+
+            backgroundWorker.CancelAsync();
+
+            if (!backgroundWorker.IsBusy)
+            {
+                _resetEvent.Set();
+                backgroundWorker.RunWorkerAsync();
+            }
 
             UpdateLblTime();
         }
@@ -157,7 +142,6 @@ namespace timer2
         private void HandleResume()
         {
             _mainTimer.Start();
-            _progressTimer.Start();
             _isPaused = false;
         }
 
@@ -179,18 +163,6 @@ namespace timer2
                 m.Result = (IntPtr)(HT_CAPTION);
         }
 
-        private void StartOnEnterClick(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
-            {
-                e.SuppressKeyPress = true;
-                e.Handled = true;
-
-                HandleEmptyNumericUpDown(sender, e);
-                HandleStart();
-            }
-        }
-
         private void BtnMinimize_Click(object sender, EventArgs e)
         {
             WindowState = FormWindowState.Minimized;
@@ -208,6 +180,39 @@ namespace timer2
                 HandleStart();
             else
                 HandleResume();
+
+            _resetEvent.Set();
+        }
+
+        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            for (int i = 0; i <= 100; i++)
+            {
+                if (backgroundWorker.CancellationPending)
+                {
+                    e.Cancel = true;
+                    progressBar.Invoke(new Action(() =>
+                    {
+                        backgroundWorker = new BackgroundWorker();
+                        backgroundWorker.DoWork += backgroundWorker_DoWork;
+                        backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
+                        backgroundWorker.WorkerReportsProgress = true;
+                        backgroundWorker.WorkerSupportsCancellation = true;
+                        backgroundWorker.RunWorkerAsync();
+                    }));
+
+                    break;
+                }
+
+                _resetEvent.WaitOne();
+                backgroundWorker.ReportProgress(i);
+                Thread.Sleep(_totalTimeInSeconds * 10);
+            }
+        }
+
+        private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value = e.ProgressPercentage;
         }
 
         private void HoursUpDown_KeyDown(object sender, KeyEventArgs e)
@@ -223,6 +228,18 @@ namespace timer2
         private void SecondsUpDown_KeyDown(object sender, KeyEventArgs e)
         {
             StartOnEnterClick(sender, e);
+        }
+
+        private void StartOnEnterClick(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                //e.Handled = true;
+
+                HandleEmptyNumericUpDown(sender, e);
+                HandleStart();
+            }
         }
     }
 }

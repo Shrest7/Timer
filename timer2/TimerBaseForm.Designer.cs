@@ -42,6 +42,7 @@
             this.hoursUpDown = new System.Windows.Forms.NumericUpDown();
             this.secondsUpDown = new System.Windows.Forms.NumericUpDown();
             this.minutesUpDown = new System.Windows.Forms.NumericUpDown();
+            this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.progressBar = new timer2.CustomProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.hoursUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.secondsUpDown)).BeginInit();
@@ -200,6 +201,13 @@
             this.minutesUpDown.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MinutesUpDown_KeyDown);
             this.minutesUpDown.Leave += new System.EventHandler(this.HandleEmptyNumericUpDown);
             // 
+            // backgroundWorker
+            // 
+            this.backgroundWorker.WorkerReportsProgress = true;
+            this.backgroundWorker.WorkerSupportsCancellation = true;
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
+            this.backgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker_ProgressChanged);
+            // 
             // progressBar
             // 
             this.progressBar.Location = new System.Drawing.Point(15, 241);
@@ -254,6 +262,7 @@
         private System.Windows.Forms.NumericUpDown secondsUpDown;
         private System.Windows.Forms.NumericUpDown minutesUpDown;
         private CustomProgressBar progressBar;
+        private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }
 
