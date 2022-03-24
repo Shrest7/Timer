@@ -9,14 +9,13 @@ using System.Windows.Forms;
 
 namespace timer2
 {
-    //Credit to: https://stackoverflow.com/questions/778678/how-to-change-the-color-of-progressbar-in-c-sharp-net-3-5
     public class CustomProgressBar : ProgressBar
     {
         public CustomProgressBar()
         {
             SetStyle(ControlStyles.UserPaint, true);
         }
-        protected override void OnPaintBackground(PaintEventArgs pevent) //Stops the flickering
+        protected override void OnPaintBackground(PaintEventArgs pevent) // Removes the flickering.
         {
         }
 
@@ -36,10 +35,20 @@ namespace timer2
                     rect.Inflate(-inset, -inset);
                     rect.Width = (int)(rect.Width * ((double)Value / Maximum));
 
-                    if (rect.Width == 0)
-                        rect.Width = 1;
+                    LinearGradientBrush brush;
 
-                    LinearGradientBrush brush = new LinearGradientBrush(rect, Color.DarkBlue, Color.DodgerBlue, LinearGradientMode.Horizontal);
+                    if (rect.Width == 0)
+                    {
+                        rect.Width = 1;
+                        brush = new LinearGradientBrush(rect, Color.Transparent,
+                        Color.Transparent, LinearGradientMode.Horizontal);
+                    }
+                    else
+                    {
+                        brush = new LinearGradientBrush(rect, Color.DarkBlue,
+                            Color.DodgerBlue, LinearGradientMode.Horizontal);
+                    }
+
                     offscreen.FillRectangle(brush, inset, inset, rect.Width, rect.Height);
 
                     e.Graphics.DrawImage(offscreenImage, 0, 0);

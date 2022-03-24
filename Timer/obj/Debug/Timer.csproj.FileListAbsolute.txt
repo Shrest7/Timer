@@ -10,3 +10,15 @@ C:\Users\dravi\source\repos\timer2\timer2\bin\Debug\timer2.exe.config
 C:\Users\dravi\source\repos\timer2\timer2\bin\Debug\timer2.exe
 C:\Users\dravi\source\repos\timer2\timer2\bin\Debug\timer2.pdb
 C:\Users\dravi\source\repos\timer2\timer2\obj\Debug\timer2.exe
+C:\Users\dravi\source\repos\timer2\Timer\bin\Debug\timer2.exe.config
+C:\Users\dravi\source\repos\timer2\Timer\bin\Debug\timer2.exe
+C:\Users\dravi\source\repos\timer2\Timer\bin\Debug\timer2.pdb
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\Timer.csproj.AssemblyReference.cache
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\Timer.csproj.SuggestedBindingRedirects.cache
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\timer2.SettingsForm.resources
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\timer2.TimerBaseForm.resources
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\timer2.Properties.Resources.resources
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\Timer.csproj.GenerateResource.cache
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\Timer.csproj.CoreCompileInputs.cache
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\timer2.exe
+C:\Users\dravi\source\repos\timer2\Timer\obj\Debug\timer2.pdb

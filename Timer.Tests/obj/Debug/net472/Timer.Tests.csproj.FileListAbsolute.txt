@@ -1,0 +1,17 @@
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\NUnit3.TestAdapter.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\NUnit3.TestAdapter.pdb
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\nunit.engine.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\nunit.engine.api.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\Timer.Tests.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\Timer.Tests.pdb
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\Microsoft.VisualStudio.CodeCoverage.Shim.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\bin\Debug\net472\nunit.framework.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.csproj.AssemblyReference.cache
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.csproj.SuggestedBindingRedirects.cache
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.AssemblyInfoInputs.cache
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.AssemblyInfo.cs
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.csproj.CoreCompileInputs.cache
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.csproj.CopyComplete
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.dll
+C:\Users\dravi\source\repos\timer2\Timer.Tests\obj\Debug\net472\Timer.Tests.pdb
