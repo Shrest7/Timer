@@ -6,7 +6,7 @@ Desktop timer application built using Windows Forms and .NET Framework 4.7.2.
 ## About
 Timer is a simple desktop app. It allows you to start a countdown, which can be paused or resumed, at any given time. When the countdown reaches 0, you'll be notified with an alarm.
 
-The app also has a ProgressBar which represents the percentage of the time passed. Surprisingly it was quite a challenge, to make this run properly, in the end I've managed to make it work using BackGroundWorker.
+The app also has a ProgressBar which represents the percentage of the time passed. Surprisingly it was quite a challenge, to make this run properly, in the end I've managed to make it work using BackGroundWorker, which uses another thread, so that ProgressBar always finishes.
 
 Features I'm hoping to add in the future:
 - plugging in your own ringtone.
